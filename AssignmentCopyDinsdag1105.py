@@ -26,27 +26,28 @@ dataList = []
 for i in data:
     dataList.append(data[i])
 
+tvs = []
 
+for i in range(len(dataList)):
+    for j in range(len(dataList[i])):
+        tvs.append(dataList[i][j])
 
-# Collect titles of all urls
 titles = []
-for i in data.keys():
-    
-    for j in data[i]:
-        j['title'] = j['title'].lower()
-        j['title'] = j['title'].replace("inches","inch")
-        j['title'] = j['title'].replace("-inch","inch")
-        j['title'] = j['title'].replace(" inch","inch")
-        j['title'] = j['title'].replace("\"","inch")
-        j['title'] = j['title'].replace("("," ")
-        j['title'] = j['title'].replace(")"," ")
+for dct in tvs:
+        dct['title'] = dct['title'].lower()
+        dct['title'] = dct['title'].replace("inches","inch")
+        dct['title'] = dct['title'].replace("-inch","inch")
+        dct['title'] = dct['title'].replace(" inch","inch")
+        dct['title'] = dct['title'].replace("\"","inch")
+        dct['title'] = dct['title'].replace("("," ")
+        dct['title'] = dct['title'].replace(")"," ")
         
-        j['title'] = j['title'].replace("hertz","hz")
-        j['title'] = j['title'].replace(" hertz","hz")
-        j['title'] = j['title'].replace("-hz","hz")
-        j['title'] = j['title'].replace(" hz","hz")
+        dct['title'] = dct['title'].replace("hertz","hz")
+        dct['title'] = dct['title'].replace(" hertz","hz")
+        dct['title'] = dct['title'].replace("-hz","hz")
+        dct['title'] = dct['title'].replace(" hz","hz")
         
-        titles.append(j['title'])
+        titles.append(dct['title'])
         
         
 wordsWithStringAndChar = set()
@@ -187,12 +188,12 @@ for i in data.keys():
 
 duplicateFound = 0
 for i in range(len(listOfCandidatePairs)):
-    for a in range(len(listOfCandidatePairs[i])):
-        for b in range(len(listOfCandidatePairs[i])):
-            if (not a == b) and oneHotEncoded[listOfCandidatePairs[i][a]] == oneHotEncoded[listOfCandidatePairs[i][b]]:
+    for a in listOfCandidatePairs[i]:
+        for b in listOfCandidatePairs[i]:
+            if (not a == b) and tvs[a]['modelID'] == tvs[b]['modelID']:
                 print('check of dit werkt')
-                print(listOfCandidatePairs[i][a])
-                print(listOfCandidatePairs[i][b])
+                print(tvs[a]['modelID'])
+                print(tvs[b]['modelID'])
             
 #clustering = linkage(dissimilarityMatrix)   
 #dn = dendrogram(clustering)
