@@ -166,12 +166,12 @@ for i in range(len(buckets)):
         numCol += 1
 print("Finished gathering candidate pairs. Elapsed time is: " + str(time.time() - starttime))  
 
-amountOfComparionsMade = 0
+amountOfComparisonsMade = 0
 for i in range(len(listOfCandidatePairs)):
     sumInBucket = 0
     for j in range(len(listOfCandidatePairs[i])):
         sumInBucket += j
-    amountOfComparionsMade += sumInBucket
+    amountOfComparisonsMade += sumInBucket
 
 duplicateTotal = 0
 for i in data.keys():
@@ -188,12 +188,22 @@ for i in data.keys():
 
 duplicateFound = 0
 for i in range(len(listOfCandidatePairs)):
-    for a in listOfCandidatePairs[i]:
-        for b in listOfCandidatePairs[i]:
-            if (not a == b) and tvs[a]['modelID'] == tvs[b]['modelID']:
-                print('check of dit werkt')
-                print(tvs[a]['modelID'])
-                print(tvs[b]['modelID'])
+    for a in range(len(listOfCandidatePairs[i])):
+        for b in range(len(listOfCandidatePairs[i])):
+            if a < b:
+                print(tvs[listOfCandidatePairs[i][a]]['modelID'])
+                print(tvs[listOfCandidatePairs[i][b]]['modelID'])
+                if tvs[listOfCandidatePairs[i][a]]['modelID'] == tvs[listOfCandidatePairs[i][b]]['modelID']:
+                    duplicateFound += 1         
+            
+pairQuality = duplicateFound/amountOfComparisonsMade
+print(pairQuality)
+
+pairCompleteness = duplicateFound / duplicateTotal
+print(pairCompleteness)
+
+F1 = (2*pairQuality*pairCompleteness)/(pairQuality+pairCompleteness)
+
             
 #clustering = linkage(dissimilarityMatrix)   
 #dn = dendrogram(clustering)
