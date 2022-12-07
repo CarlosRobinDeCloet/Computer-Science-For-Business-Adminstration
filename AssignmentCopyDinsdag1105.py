@@ -122,7 +122,7 @@ def split_signatureMatrix(signature, b: int):
 
 ## 650 is divisible by {1, 2, 5, 10, 13, 15, 25, 26, 50, 65, 130, 325, and 650}
 
-subVectorMatrix = split_signatureMatrix(signatureMatrix, 50)
+subVectorMatrix = split_signatureMatrix(signatureMatrix, 10)
 print("Finished splitting vectors. Elapsed time is: " + str(time.time() - starttime))
 
 
@@ -242,6 +242,7 @@ def calculatingPrecisionAndRecall(clf_matrix, tvs):
     tp = 0
     fp = 0
     fn = 0
+    count = 0
     
     for i in range(len(clf_matrix)):
         for j in range(len(clf_matrix)):
@@ -249,8 +250,10 @@ def calculatingPrecisionAndRecall(clf_matrix, tvs):
                 if clf_matrix[i][j] == 1:
                     if tvs[i]['modelID'] == tvs[j]['modelID']:
                         tp += 1
+                        count += 1
                     else:
                         fp += 1
+                        count += 1
                 if clf_matrix[i][j] == 0:
                     if tvs[i]['modelID'] == tvs[j]['modelID']:
                         fn += 1
@@ -258,6 +261,8 @@ def calculatingPrecisionAndRecall(clf_matrix, tvs):
     precision = tp/(tp+fp)
     recall = tp/(tp+fn)
     
+    print("")
+    print("Count is: " + str(count))
     print("")
     print("tp = " + str(tp))
     print("fp = " + str(fp))
