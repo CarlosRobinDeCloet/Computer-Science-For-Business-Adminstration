@@ -251,8 +251,35 @@ classifyAsDuplicates(predictedDuplicateMatrix, dissimilarityMatrix, 0.8)
                 
 print('Calculating similarities finished. Elapsed time is: ' + str(time.time() - starttime))       
  
-#clustering = linkage(dissimilarityMatrix)   
-#dn = dendrogram(clustering)
+def calculatingPrecisionAndRecall(clf_matrix, tvs):
+    
+    tp = 0
+    fp = 0
+    fn = 0
+    
+    for i in range(len(clf_matrix)):
+        for j in range(len(clf_matrix)):
+            if clf_matrix[i][j] == 1:
+                if tvs[i]['modelID'] == tvs[j]['modelID']:
+                    tp += 1
+                else:
+                    fp += 1
+            if clf_matrix[i][j] == 0:
+                if tvs[i]['modelID'] == tvs[j]['modelID']:
+                    fn += 1
+    
+    precision = tp/(tp+fp)
+    recall = tp/(tp+fn)
+    
+    print("tp = " + str(tp))
+    print("fp = " + str(fp))
+    
+    f1 = 2*precision*recall/(precision+recall)
+    return f1
+
+f1 = calculatingPrecisionAndRecall(predictedDuplicateMatrix, tvs)
+print(f1)
+
             
 endtime = time.time()
 
