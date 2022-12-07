@@ -10,8 +10,6 @@ import re
 import json
 import time
 import random
-from sklearn.metrics import jaccard_score
-from random import shuffle
 import numpy as np
 from scipy.cluster.hierarchy import dendrogram, linkage
 
@@ -53,8 +51,6 @@ def hashFunction(a,b,p,x):
     return (a+b*(x))%p
 
 def jaccard_similarity(x,y):
-    """A function for finding the similarity between two sets"""
-    "Source: https://www.learndatasci.com/glossary/jaccard-similarity/"
     intersection = x.intersection(y)
     union = x.union(y)
     similarity = len(intersection) / float(len(union))
@@ -161,10 +157,10 @@ F1BS  = []
 #####################################################################################################################
 # Bootstrapped data.
 #####################################################################################################################
-for i in range(5):
+
+for i in range(5):                                                                      #!!!!! Change to 5
     
     print("Iteration " + str(i+1) + " of bootstrapping the data. Elapsed time is: " + str(time.time()-starttime))
-    
 
     bootstrappedData = bootstrapping(tvs)
         
@@ -175,15 +171,18 @@ for i in range(5):
     titlesTrain = []
     for dict in trainingData:
         titlesTrain.append(dict['title'])
-        
+        dict['modelwords'] = []
+       
     titlesTest = []
     for dict in testData:
         titlesTest.append(dict['title'])
+        dict['modelwords'] = []
     
     wordsWithStringAndChar = set()
-    for i in titlesTrain:
-        modelwords = re.finditer('[a-zA-Z0-9]*(([0-9]+[^0-9, ]+)|([^0-9, ]+[0-9]+))[a-zA-Z0-9]*' ,i)
+    for i in range(len(titlesTrain)):
+        modelwords = re.finditer('[a-zA-Z0-9]*(([0-9]+[^0-9, ]+)|([^0-9, ]+[0-9]+))[a-zA-Z0-9]*' ,titlesTrain[i])
         for candidateWord in modelwords:
+            trainingData[i]['modelwords'].append(candidateWord.group())
             wordsWithStringAndChar.add(candidateWord.group())
 
     listOfWords = list(wordsWithStringAndChar)
@@ -192,7 +191,9 @@ for i in range(5):
 
     for i in range(len(titlesTrain)):
         oneHotEncoded.append([1 if x in titlesTrain[i].split() else 0 for x in listOfWords])
-
+    
+    
+    
     prime = 4549
 
     signatureMatrix = np.empty([650,len(oneHotEncoded)]) ### [oneHotEncoded/2, oneHotEncoded]
@@ -296,16 +297,14 @@ for i in range(5):
         for j in range(len(candidatePairsMatrix[i])):
             if i < j:
                 if candidatePairsMatrix[i][j] == 1:
-                    modelWordsI = set(titlesTrain[i].split(" "))
-                    modelWordsJ = set(titlesTrain[j].split(" "))
+                    modelWordsI = set(trainingData[i]['modelwords'])
+                    modelWordsJ = set(trainingData[j]['modelwords'])
                     dissimilarityMatrix[i,j] = 1 - jaccard_similarity(modelWordsI, modelWordsJ)
                     
     predictedDuplicateMatrix = np.empty([n,n])
     predictedDuplicateMatrix.fill(False)
 
-    # Threshold should be between 0 and 1
-
-    
+    # Threshold should be between 0 and 1    
     classifyAsDuplicates(predictedDuplicateMatrix, dissimilarityMatrix, 1)    
                 
     print('Calculating similarities finished. Elapsed time is: ' + str(time.time() - starttime))       
@@ -325,9 +324,15 @@ for i in range(5):
     print("The pair quality is: " + str(pairQuality*100) + "%.")
     print("The pair completeness is: " + str(pairCompleteness*100) + "%.")
     print("The F1* score is: " + str(F1*100))
+    print("The F1 score is: " + str(f1*100))
     print("")
     
 print("Program finished. Total elapsed time is: " + str(endtime - starttime))
 
-
+print("")
+print("The average pair quality is: " + str(np.average(PQBS)*100) + "%.")
+print("The pair completeness is: " + str(np.average(PCBS)*100) + "%.")
+print("The F1* score is: " + str(np.average(F1asteriskBS)))
+print("The F1 score is: " + str(np.average(F1BS)))
+print("")
 
