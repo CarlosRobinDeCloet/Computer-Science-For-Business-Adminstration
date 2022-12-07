@@ -56,7 +56,6 @@ for i in titles:
     for candidateWord in modelwords:
         wordsWithStringAndChar.add(candidateWord.group())
 
-
 listOfWords = list(wordsWithStringAndChar)
 
 oneHotEncoded = []
@@ -204,21 +203,61 @@ for i in range(len(candidatePairsMatrix)):
                 
             
 pairQuality = duplicateFound/amountOfComparisonsMade
-print(pairQuality)
 
 pairCompleteness = duplicateFound / duplicateTotal
-print(pairCompleteness)
 
 F1 = (2*pairQuality*pairCompleteness)/(pairQuality+pairCompleteness)
 
+def bootstrapping(tvs: list):
+    bootstrappedData = random.choices(tvs, k = int(len(tvs)))
+    
+    trainingData = []
+    for dictionary in bootstrappedData:
+        if dictionary not in trainingData:
+            trainingData.append(dictionary)
             
+    testData = []
+    for dictionary in tvs:
+        if dictionary not in trainingData:
+            testData.append(dictionary)
+    return trainingData, testData  
+
+
+
+#USING JACCARD SIMILARITY AS FIRST EXPLORATION!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+dissimilarityMatrix = np.empty([1624,1624])
+dissimilarityMatrix.fill(99999)
+
+for i in range(len(candidatePairsMatrix)):
+    for j in range(len(candidatePairsMatrix[i])):
+        if i < j:
+            if candidatePairsMatrix[i][j] == 1:
+                modelWordsI = set(titles[i].split(" "))
+                modelWordsJ = set(titles[j].split(" "))
+                dissimilarityMatrix[i,j] = 1 - jaccard_similarity(modelWordsI, modelWordsJ)
+
+predictedDuplicateMatrix = np.empty([1624,1624])
+predictedDuplicateMatrix.fill(False)
+
+# Threshold should be between 0 and 1
+def classifyAsDuplicates(clf_matrix,dis_matrix, threshold: float):
+    for i in range(len(clf_matrix)):
+        for j in range(len(clf_matrix)):
+            if i < j:
+                if dis_matrix[i][j] < threshold:
+                    clf_matrix[i][j] = True
+    
+classifyAsDuplicates(predictedDuplicateMatrix, dissimilarityMatrix, 0.8)    
+                
+print('Calculating similarities finished. Elapsed time is: ' + str(time.time() - starttime))       
+ 
 #clustering = linkage(dissimilarityMatrix)   
 #dn = dendrogram(clustering)
             
 endtime = time.time()
 
 print("")
-print("The amount of bands is: " + str(13) + "and the amount of rows is: " + str(650/13))
+print("The amount of bands is: " + str(13) + " and the amount of rows is: " + str(650/13))
 print("The pair quality is: " + str(pairQuality*100) + "%.")
 print("The pair completeness is: " + str(pairCompleteness*100) + "%.")
 print("The F1 score is: " + str(F1*100))
