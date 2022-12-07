@@ -89,7 +89,10 @@ for r in range(len(oneHotEncoded[0])):
                 if hashValues[j] < signatureMatrix[j][i]:
                     signatureMatrix[j][i] = hashValues[j]
             
-
+for i in range(len(signatureMatrix)):
+    for j in range(len(signatureMatrix[i])):
+        if signatureMatrix[i][j] == 99999:
+            print('ohno')
     
                                                                       
 # Jaccard Similarity
@@ -105,6 +108,7 @@ def jaccard_similarity(x,y):
 def split_signatureMatrix(signature, b: int):
     assert len(signature) % b == 0
     r = int(len(signature)/b)
+
     splittedColumns = []
     
     for c in range(len(signature[0])):
@@ -117,32 +121,32 @@ def split_signatureMatrix(signature, b: int):
             colNum = colNum + 1    
     return splittedColumns
 
+## 650 is divisible by {1, 2, 5, 10, 13, 15, 25, 26, 50, 65, 130, 325, and 650}
 
-subVectorMatrix = split_signatureMatrix(signatureMatrix, 50)
+subVectorMatrix = split_signatureMatrix(signatureMatrix, 65)
 print("Finished splitting vectors. Elapsed time is: " + str(time.time() - starttime))
 
 
 buckets = []
-for i in range(10000):
+for i in range(10000000):
     buckets.append([])  
     
 def binVectors(rowPart: list, bucket: list):
 
     for i in range(len(rowPart)):
-        for j in range(len(rowPart[i])):
+        for j in rowPart[i]:
             stringOfNumber = str()
-            for k in range(len(rowPart[i][j])):
-                stringOfNumber += str(rowPart[i][j][k])
+            for k in range(len(j)):
+                stringOfNumber += str(j[k])
             number = int(stringOfNumber)
-            number = number%9631
-        buckets[number].append(i)
-    
-    
+            number = number%9999991
+            buckets[number].append(i)
+        
 binVectors(subVectorMatrix, buckets)
 print("Finished bucketing vectors. Elapsed time is: " + str(time.time() - starttime))
 
 
-dissimilarityMatrix = np.empty([1629,1629])
+dissimilarityMatrix = np.empty([1624,1624])
 dissimilarityMatrix.fill(99999)
 
 ## USING JACCARD SIMILARITY AS FIRST EXPLORATION!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -166,13 +170,6 @@ for i in range(len(buckets)):
         numCol += 1
 print("Finished gathering candidate pairs. Elapsed time is: " + str(time.time() - starttime))  
 
-amountOfComparisonsMade = 0
-for i in range(len(listOfCandidatePairs)):
-    sumInBucket = 0
-    for j in range(len(listOfCandidatePairs[i])):
-        sumInBucket += j
-    amountOfComparisonsMade += sumInBucket
-
 duplicateTotal = 0
 for i in data.keys():
     
@@ -186,15 +183,25 @@ for i in data.keys():
       
     duplicateTotal += sumDuplicateInKey
 
+candidatePairsMatrix = np.empty([1624,1624])
+candidatePairsMatrix.fill(False)
+
+for i in listOfCandidatePairs:
+    for j in i:
+        for k in i:
+            candidatePairsMatrix[j][k] = True
+
+                    
 duplicateFound = 0
-for i in range(len(listOfCandidatePairs)):
-    for a in range(len(listOfCandidatePairs[i])):
-        for b in range(len(listOfCandidatePairs[i])):
-            if a < b:
-                print(tvs[listOfCandidatePairs[i][a]]['modelID'])
-                print(tvs[listOfCandidatePairs[i][b]]['modelID'])
-                if tvs[listOfCandidatePairs[i][a]]['modelID'] == tvs[listOfCandidatePairs[i][b]]['modelID']:
-                    duplicateFound += 1         
+amountOfComparisonsMade = 0
+for i in range(len(candidatePairsMatrix)):
+    for j in range(len(candidatePairsMatrix[i])):
+        if i < j:
+            if candidatePairsMatrix[i][j] == 1:
+                amountOfComparisonsMade += 1
+                if tvs[i]['modelID'] == tvs[j]['modelID']:
+                    duplicateFound += 1
+                
             
 pairQuality = duplicateFound/amountOfComparisonsMade
 print(pairQuality)
@@ -209,6 +216,13 @@ F1 = (2*pairQuality*pairCompleteness)/(pairQuality+pairCompleteness)
 #dn = dendrogram(clustering)
             
 endtime = time.time()
+
+print("")
+print("The amount of bands is: " + str(13) + "and the amount of rows is: " + str(650/13))
+print("The pair quality is: " + str(pairQuality*100) + "%.")
+print("The pair completeness is: " + str(pairCompleteness*100) + "%.")
+print("The F1 score is: " + str(F1*100))
+print("")
 print("Program finished. Total elapsed time is: " + str(endtime - starttime))
 
 
