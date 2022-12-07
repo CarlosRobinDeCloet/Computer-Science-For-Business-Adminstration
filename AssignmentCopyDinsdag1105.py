@@ -271,14 +271,19 @@ def calculatingPrecisionAndRecall(clf_matrix, tvs):
     precision = tp/(tp+fp)
     recall = tp/(tp+fn)
     
+    print("")
     print("tp = " + str(tp))
     print("fp = " + str(fp))
-    
+    print("fn = " + str(fn))
+    print("")
+    print("Precision = " + str(precision))
+    print("Recall = " + str(recall))
+    print("")
     f1 = 2*precision*recall/(precision+recall)
     return f1
 
 f1 = calculatingPrecisionAndRecall(predictedDuplicateMatrix, tvs)
-print(f1)
+print("F1 score is: " + str(f1*100))
 
             
 endtime = time.time()
