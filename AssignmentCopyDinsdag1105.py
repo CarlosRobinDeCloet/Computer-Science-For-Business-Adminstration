@@ -145,20 +145,6 @@ binVectors(subVectorMatrix, buckets)
 print("Finished bucketing vectors. Elapsed time is: " + str(time.time() - starttime))
 
 
-dissimilarityMatrix = np.empty([1624,1624])
-dissimilarityMatrix.fill(99999)
-
-## USING JACCARD SIMILARITY AS FIRST EXPLORATION!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#for i in range(len(buckets)):    
-#    if len(buckets[i]) > 0:
-#        for j in buckets[i]:
-#            words_doc1 = set(titles[j].split())
-#            for k in buckets[i]:
-#                words_doc2 = set(titles[k].split())
-#                dissimilarityMatrix[j,k] = 1 - jaccard_similarity(words_doc1, words_doc2)
-                
-#print('Calculating similarities finished. Elapsed time is: ' + str(time.time() - starttime))       
- 
 listOfCandidatePairs = []
 numCol = 0
 for i in range(len(buckets)):
@@ -247,7 +233,7 @@ def classifyAsDuplicates(clf_matrix,dis_matrix, threshold: float):
                 if dis_matrix[i][j] < threshold:
                     clf_matrix[i][j] = True
     
-classifyAsDuplicates(predictedDuplicateMatrix, dissimilarityMatrix, 0.8)    
+classifyAsDuplicates(predictedDuplicateMatrix, dissimilarityMatrix, 1)    
                 
 print('Calculating similarities finished. Elapsed time is: ' + str(time.time() - starttime))       
  
@@ -259,14 +245,15 @@ def calculatingPrecisionAndRecall(clf_matrix, tvs):
     
     for i in range(len(clf_matrix)):
         for j in range(len(clf_matrix)):
-            if clf_matrix[i][j] == 1:
-                if tvs[i]['modelID'] == tvs[j]['modelID']:
-                    tp += 1
-                else:
-                    fp += 1
-            if clf_matrix[i][j] == 0:
-                if tvs[i]['modelID'] == tvs[j]['modelID']:
-                    fn += 1
+            if i < j:
+                if clf_matrix[i][j] == 1:
+                    if tvs[i]['modelID'] == tvs[j]['modelID']:
+                        tp += 1
+                    else:
+                        fp += 1
+                if clf_matrix[i][j] == 0:
+                    if tvs[i]['modelID'] == tvs[j]['modelID']:
+                        fn += 1
     
     precision = tp/(tp+fp)
     recall = tp/(tp+fn)
@@ -292,7 +279,7 @@ print("")
 print("The amount of bands is: " + str(13) + " and the amount of rows is: " + str(650/13))
 print("The pair quality is: " + str(pairQuality*100) + "%.")
 print("The pair completeness is: " + str(pairCompleteness*100) + "%.")
-print("The F1 score is: " + str(F1*100))
+print("The F1* score is: " + str(F1*100))
 print("")
 print("Program finished. Total elapsed time is: " + str(endtime - starttime))
 
