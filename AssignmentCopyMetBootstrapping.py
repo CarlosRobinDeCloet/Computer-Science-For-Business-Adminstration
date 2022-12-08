@@ -104,13 +104,6 @@ def classifyAsDuplicates(clf_matrix,dis_matrix, threshold: float):
                 if dis_matrix[i][j] < threshold:
                     clf_matrix[i][j] = True
                     
-                    
-def classifyAsDuplicates(clf_matrix,dis_matrix, threshold: float):
-    for i in range(len(clf_matrix)):
-        for j in range(len(clf_matrix)):
-            if i < j:
-                if dis_matrix[i][j] < threshold:
-                    clf_matrix[i][j] = True
    
 def calculatingPrecisionAndRecall(clf_matrix, tvs):
     
@@ -158,7 +151,7 @@ F1BS  = []
 # Bootstrapped data.
 #####################################################################################################################
 
-for i in range(5):                                                                      #!!!!! Change to 5
+for i in range(5):                                                                
     
     print("Iteration " + str(i+1) + " of bootstrapping the data. Elapsed time is: " + str(time.time()-starttime))
 
@@ -270,13 +263,14 @@ for i in range(5):                                                              
         for j in i:
             for k in i:
                 candidatePairsMatrix[j][k] = True
-
-                    
+                  
     duplicateFound = 0
     amountOfComparisonsMade = 0
     for i in range(len(candidatePairsMatrix)):
         for j in range(len(candidatePairsMatrix[i])):
             if i < j:
+                
+                
                 if candidatePairsMatrix[i][j] == 1:
                     amountOfComparisonsMade += 1
                     if trainingData[i]['modelID'] == trainingData[j]['modelID']:
@@ -310,8 +304,7 @@ for i in range(5):                                                              
     print('Calculating similarities finished. Elapsed time is: ' + str(time.time() - starttime))       
  
     f1 = calculatingPrecisionAndRecall(predictedDuplicateMatrix, trainingData)
-    print("F1 score is: " + str(f1*100))
-        
+
     endtime = time.time()
     
     PCBS.append(pairCompleteness)
@@ -320,7 +313,7 @@ for i in range(5):                                                              
     F1asteriskBS.append(F1)
 
     print("")
-    print("The amount of bands is: " + str(13) + " and the amount of rows is: " + str(650/13))
+    print("The amount of bands is: " + str(50) + " and the amount of rows is: " + str(650/50))
     print("The pair quality is: " + str(pairQuality*100) + "%.")
     print("The pair completeness is: " + str(pairCompleteness*100) + "%.")
     print("The F1* score is: " + str(F1*100))
@@ -329,10 +322,15 @@ for i in range(5):                                                              
     
 print("Program finished. Total elapsed time is: " + str(endtime - starttime))
 
+avgPQ = np.average(PQBS)
+avgPC = np.average(PCBS)
+avgF1asterisks = np.average(F1asteriskBS)
+avgF1 = np.average(F1BS)
+    
 print("")
-print("The average pair quality is: " + str(np.average(PQBS)*100) + "%.")
-print("The pair completeness is: " + str(np.average(PCBS)*100) + "%.")
-print("The F1* score is: " + str(np.average(F1asteriskBS)))
-print("The F1 score is: " + str(np.average(F1BS)))
+print("The average pair quality is: " + str(avgPQ*100) + "%.")
+print("The average pair completeness is: " + str(avgPC*100) + "%.")
+print("The average F1* score is: " + str(avgF1asterisks))
+print("The average F1 score is: " + str(avgF1))
 print("")
 

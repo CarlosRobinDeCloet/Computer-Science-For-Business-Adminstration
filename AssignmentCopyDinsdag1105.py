@@ -120,9 +120,9 @@ def split_signatureMatrix(signature, b: int):
             colNum = colNum + 1    
     return splittedColumns
 
-## 650 is divisible by {1, 2, 5, 10, 13, 15, 25, 26, 50, 65, 130, 325, and 650}
+## 650 is divisible by {1, 2, 5, 10, 13, 25, 26, 50, 65, 130, 325, and 650}
 
-subVectorMatrix = split_signatureMatrix(signatureMatrix, 10)
+subVectorMatrix = split_signatureMatrix(signatureMatrix, 5)
 print("Finished splitting vectors. Elapsed time is: " + str(time.time() - starttime))
 
 
@@ -190,7 +190,7 @@ for i in range(len(candidatePairsMatrix)):
             
 pairQuality = duplicateFound/amountOfComparisonsMade
 
-pairCompleteness = duplicateFound / duplicateTotal
+pairCompleteness = duplicateFound / 399
 
 F1 = (2*pairQuality*pairCompleteness)/(pairQuality+pairCompleteness)
 
