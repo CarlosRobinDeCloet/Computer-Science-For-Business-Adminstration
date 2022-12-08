@@ -19,6 +19,9 @@ starttime = time.time()
 f = open('TVs-all-merged.json', 'r')
 data = json.load(f)
 
+
+listWithBrands = ['samsung', 'vizio', 'westinghouse', 'jvc tv', 'sony', 'philips', 'toshiba', 'sharp', 'upstar', 'jvc', 'sceptre', 'sanyo', 'sunbritetv', 'proscan', 'lg electronics', 'seiki', 'pansonic', 'lg', 'craig', 'panasonic', 'sansui', 'viewsonic', 'hannspree', 'toshiba', 'hisense', 'supersonic', 'rca', 'coby', 'haier', 'sigmac']
+
 dataList = []
 
 for i in data:
@@ -46,6 +49,18 @@ for dct in tvs:
         dct['title'] = dct['title'].replace(" hz","hz")
         
         titles.append(dct['title'])
+        
+        dct['brand'] = []
+        search_brand = dct['title'].split()
+        for word in search_brand:
+            if word in listWithBrands:
+                dct['brand'] = word
+        
+        if dct['brand'] == 'jvc tv':
+            dct['brand'] = 'jvc'
+            
+        if dct['brand'] == 'lg electronics':
+            dct['brand'] = 'lg'
         
 def hashFunction(a,b,p,x):
     return (a+b*(x))%p
@@ -151,7 +166,7 @@ F1BS  = []
 # Bootstrapped data.
 #####################################################################################################################
 
-for i in range(5):                                                                
+for i in range(1):                                                                
     
     print("Iteration " + str(i+1) + " of bootstrapping the data. Elapsed time is: " + str(time.time()-starttime))
 
@@ -243,19 +258,6 @@ for i in range(5):
                 
     print("Finished gathering candidate pairs. Elapsed time is: " + str(time.time() - starttime))  
 
-    duplicateTotal = 0
-    for i in data.keys():
-    
-        sumDuplicateInKey = 0
-        amountOfItemsInKey = 0
-        for j in data[i]:
-            amountOfItemsInKey += 1
-    
-        if amountOfItemsInKey > 1:
-            sumDuplicateInKey += amountOfItemsInKey -1
-      
-        duplicateTotal += sumDuplicateInKey
-
     candidatePairsMatrix = np.empty([n,n])
     candidatePairsMatrix.fill(False)
 
@@ -263,14 +265,20 @@ for i in range(5):
         for j in i:
             for k in i:
                 candidatePairsMatrix[j][k] = True
+                if trainingData[j]['shop'] == trainingData[k]['shop']:     ######### These 2 lines were added
+                    candidatePairsMatrix[j][k] = False
+                if trainingData[j]['brand'] != [] and trainingData[k]['brand'] != [] and trainingData[j]['brand'] != trainingData[k]['brand']:
+                    candidatePairsMatrix[j][k] = False
+
                   
     duplicateFound = 0
+    duplicateTotal = 0
     amountOfComparisonsMade = 0
     for i in range(len(candidatePairsMatrix)):
         for j in range(len(candidatePairsMatrix[i])):
             if i < j:
-                
-                
+                if trainingData[i]['modelID'] == trainingData[j]['modelID']:
+                    duplicateTotal += 1
                 if candidatePairsMatrix[i][j] == 1:
                     amountOfComparisonsMade += 1
                     if trainingData[i]['modelID'] == trainingData[j]['modelID']:
@@ -299,7 +307,7 @@ for i in range(5):
     predictedDuplicateMatrix.fill(False)
 
     # Threshold should be between 0 and 1    
-    classifyAsDuplicates(predictedDuplicateMatrix, dissimilarityMatrix, 1)    
+    classifyAsDuplicates(predictedDuplicateMatrix, dissimilarityMatrix, 0.8)    
                 
     print('Calculating similarities finished. Elapsed time is: ' + str(time.time() - starttime))       
  

@@ -122,7 +122,7 @@ def split_signatureMatrix(signature, b: int):
 
 ## 650 is divisible by {1, 2, 5, 10, 13, 25, 26, 50, 65, 130, 325, and 650}
 
-subVectorMatrix = split_signatureMatrix(signatureMatrix, 5)
+subVectorMatrix = split_signatureMatrix(signatureMatrix, 50)
 print("Finished splitting vectors. Elapsed time is: " + str(time.time() - starttime))
 
 
