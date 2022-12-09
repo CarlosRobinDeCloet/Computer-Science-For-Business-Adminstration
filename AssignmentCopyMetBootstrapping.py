@@ -11,8 +11,9 @@ import json
 import time
 import random
 import numpy as np
-from scipy.cluster.hierarchy import dendrogram, linkage
-
+from scipy.cluster import hierarchy
+from numpy.linalg import norm
+from scipy.cluster.hierarchy import dendrogram
 starttime = time.time()
 
 # Loading data
@@ -69,6 +70,13 @@ def jaccard_similarity(x,y):
     intersection = x.intersection(y)
     union = x.union(y)
     similarity = len(intersection) / float(len(union))
+    return similarity
+
+def cosine_similarity(x,y):
+    dotprod = np.dot(x,y)
+    normX = norm(x)
+    normY = norm(y)
+    similarity = dotprod/(normX*normY)
     return similarity
 
 def split_signatureMatrix(signature, b: int):
@@ -155,18 +163,23 @@ def calculatingPrecisionAndRecall(clf_matrix, tvs):
     print("Recall = " + str(recall))
     print("")
     f1 = 2*precision*recall/(precision+recall)
-    return f1                    
+    return f1, precision, recall                    
    
 PQBS = []    
 PCBS = []
 F1asteriskBS = []
 F1BS  = []   
+PR = []
+RC = []
+
+
+bands = [5,13,26,50,65,130]
     
 #####################################################################################################################
 # Bootstrapped data.
 #####################################################################################################################
 
-for i in range(1):                                                                
+for i in range(5):                                                                
     
     print("Iteration " + str(i+1) + " of bootstrapping the data. Elapsed time is: " + str(time.time()-starttime))
 
@@ -187,13 +200,40 @@ for i in range(1):
         dict['modelwords'] = []
     
     wordsWithStringAndChar = set()
+    countWordsWithStringAndChar = []
     for i in range(len(titlesTrain)):
         modelwords = re.finditer('[a-zA-Z0-9]*(([0-9]+[^0-9, ]+)|([^0-9, ]+[0-9]+))[a-zA-Z0-9]*' ,titlesTrain[i])
         for candidateWord in modelwords:
             trainingData[i]['modelwords'].append(candidateWord.group())
             wordsWithStringAndChar.add(candidateWord.group())
+            countWordsWithStringAndChar.append(candidateWord.group())
+            
+    for products in trainingData:
+        for key in products['featuresMap'].keys():
+            modelwords = re.finditer('(\d+\:+\d)',products['featuresMap'][key])
+            for candidateWord in modelwords:
+                trainingData[i]['modelwords'].append(candidateWord.group())
+                wordsWithStringAndChar.add(candidateWord.group())
+                countWordsWithStringAndChar.append(candidateWord.group())
 
     listOfWords = list(wordsWithStringAndChar)
+    listOfweights =[]
+    wordCounter = {}
+    for word in listOfWords:
+        wordCounter[word] = []
+        
+    for word in countWordsWithStringAndChar:
+        wordCounter[word].append(1)
+        
+    for word in listOfWords:
+        wordCounter[word] = 1/sum(wordCounter[word])
+        if wordCounter[word] == 1:
+            wordCounter[word] = 0.0
+      
+    listOfWeights = []
+    for word in listOfWords:
+        listOfWeights.append(wordCounter[word])
+    
 
     oneHotEncoded = []
 
@@ -215,8 +255,8 @@ for i in range(1):
      
         hashValues = hashFunction(a,b,prime,r)
         
-        if r%50 == 0:
-            print('Current iteration for minhashing is: ' + str(r) + " Elapsed time is: " + str(time.time()-starttime))
+        #if r%50 == 0:
+        #    print('Current iteration for minhashing is: ' + str(r) + " Elapsed time is: " + str(time.time()-starttime))
     
     
         for i in range(len(oneHotEncoded)):
@@ -233,7 +273,7 @@ for i in range(1):
                                                                       
     ## 650 is divisible by {1, 2, 5, 10, 13, 15, 25, 26, 50, 65, 130, 325, and 650}
 
-    subVectorMatrix = split_signatureMatrix(signatureMatrix, 50)
+    subVectorMatrix = split_signatureMatrix(signatureMatrix, 65)
     print("Finished splitting vectors. Elapsed time is: " + str(time.time() - starttime))
 
 
@@ -294,21 +334,27 @@ for i in range(1):
     #USING JACCARD SIMILARITY AS FIRST EXPLORATION!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     dissimilarityMatrix = np.empty([n,n])
     dissimilarityMatrix.fill(99999)
+    
 
     for i in range(len(candidatePairsMatrix)):
         for j in range(len(candidatePairsMatrix[i])):
             if i < j:
                 if candidatePairsMatrix[i][j] == 1:
-                    modelWordsI = set(trainingData[i]['modelwords'])
-                    modelWordsJ = set(trainingData[j]['modelwords'])
-                    dissimilarityMatrix[i,j] = 1 - jaccard_similarity(modelWordsI, modelWordsJ)
+                    #modelWordsI = set(trainingData[i]['modelwords'])
+                    #modelWordsJ = set(trainingData[j]['modelwords'])
+                    #dissimilarityMatrix[i,j] = 1 - jaccard_similarity(modelWordsI, modelWordsJ)
+                                           
+                    
+                    binaryVectorI = oneHotEncoded[i]
+                    binaryVectorJ = oneHotEncoded[j]
+                    dissimilarityMatrix[i,j] = 1 - cosine_similarity(binaryVectorI,binaryVectorJ)
                     
     predictedDuplicateMatrix = np.empty([n,n])
     predictedDuplicateMatrix.fill(False)
 
     # Threshold should be between 0 and 1    
     classifyAsDuplicates(predictedDuplicateMatrix, dissimilarityMatrix, 0.8)    
-                
+    
     print('Calculating similarities finished. Elapsed time is: ' + str(time.time() - starttime))       
  
     f1 = calculatingPrecisionAndRecall(predictedDuplicateMatrix, trainingData)
@@ -317,8 +363,10 @@ for i in range(1):
     
     PCBS.append(pairCompleteness)
     PQBS.append(pairQuality)
-    F1BS.append(f1)
+    F1BS.append(f1[0])
     F1asteriskBS.append(F1)
+    PR.append(f1[1])
+    RC.append(f1[2])
 
     print("")
     print("The amount of bands is: " + str(50) + " and the amount of rows is: " + str(650/50))
@@ -334,11 +382,15 @@ avgPQ = np.average(PQBS)
 avgPC = np.average(PCBS)
 avgF1asterisks = np.average(F1asteriskBS)
 avgF1 = np.average(F1BS)
+avgPR = np.average(PR)
+avgRC = np.average(RC)
     
 print("")
 print("The average pair quality is: " + str(avgPQ*100) + "%.")
 print("The average pair completeness is: " + str(avgPC*100) + "%.")
 print("The average F1* score is: " + str(avgF1asterisks))
 print("The average F1 score is: " + str(avgF1))
+print("The average precision score is: " + str(avgPR))
+print("The average recall score is: " + str(avgRC))
 print("")
 
